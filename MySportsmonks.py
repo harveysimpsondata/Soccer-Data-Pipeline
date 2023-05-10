@@ -100,3 +100,9 @@ def generate_date_dataframe(start_year, end_year, start_month, end_month, start_
     days = date_range.day.tolist()
 
     return years, months, days
+
+def write_local(df: pd.DataFrame) -> Path:
+    """Write DataFrame out locally as parquet file"""
+    path = Path(f"data/{color}/{dataset_file}.parquet")
+    df.to_parquet(path, compression="gzip")
+    return path
