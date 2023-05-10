@@ -64,3 +64,9 @@ def extract(year: int, month: int, day: int) -> pd.DataFrame:
        else:
 
               return pd.DataFrame()
+
+def extract_multiple_days(years: list[int], months: list[int], days: list[int]) -> pd.DataFrame:
+       df = pd.DataFrame()
+       for year, month, day in zip(years, months, days):
+              df = df.append(extract(year, month, day))
+       return df
