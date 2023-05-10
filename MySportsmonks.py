@@ -101,8 +101,21 @@ def generate_date_dataframe(start_year, end_year, start_month, end_month, start_
 
     return years, months, days
 
+# def date_range_string(df):
+#     df['date'] = pd.to_datetime(df[['year', 'month', 'day']])
+#     start_date = df['date'].min()
+#     end_date = df['date'].max()
+#     date_range_str = f"{start_date.date()} to {end_date.date()}"
+#     return date_range_str
+
 def write_local(df: pd.DataFrame) -> Path:
     """Write DataFrame out locally as parquet file"""
-    path = Path(f"data/{color}/{dataset_file}.parquet")
+    df['date'] = pd.to_datetime(df[['year', 'month', 'day']])
+    start_date = df['date'].min()
+    end_date = df['date'].max()
+    date_range_str = f"{start_date.date()} to {end_date.date()} Scottish Premiership"
+
+
+    path = Path(f"data/{date_range_str}.parquet")
     df.to_parquet(path, compression="gzip")
     return path
