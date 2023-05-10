@@ -7,12 +7,17 @@ import csv
 import os
 import requests
 import config
+from calendar import monthrange
+from pathlib import Path
+from prefect import flow, task
+from prefect_gcp.cloud_storage import GcsBucket
+from prefect.tasks import task_input_hash
+from datetime import timedelta
 
 
 
 
-
-def extract(year: int, month: int, day: int) -> pd.DataFrame:
+def extract(year: str, month: str, day: str) -> pd.DataFrame:
 
        url1 = f"https://api.sportmonks.com/v3/football/fixtures/date/{year}-{month:02}-{day:02}?api_token={config.api_key}&include=scores;participants"
        url = f"https://api.sportmonks.com/v3/football/fixtures/date/2022-09-03?api_token={config.api_key}&include=scores;participants"
@@ -62,11 +67,36 @@ def extract(year: int, month: int, day: int) -> pd.DataFrame:
               return df
 
        else:
+           print(f'No data found for {year}-{month:02}-{day:02}')
+           return pd.DataFrame()
 
-              return pd.DataFrame()
-
-def extract_multiple_days(years: list[int], months: list[int], days: list[int]) -> pd.DataFrame:
+def extract_multiple_days(years: list[int] = [2022], months: list[int] = [9], days: list[int] = [6]) -> pd.DataFrame:
        df = pd.DataFrame()
-       for year, month, day in zip(years, months, days):
-              df = df.append(extract(year, month, day))
+       for year in years:
+           for month in months:
+               for day in days:
+
+                   df = df.append(extract(str(year), f'{month:02}', f'{day:02}'))
+
        return df
+
+def generate_date_dataframe(start_year, end_year, start_month, end_month, start_day=1, end_day=None):
+    if end_day is None:
+        _, end_day = monthrange(end_year, end_month)
+
+    date_range = pd.date_range(
+        start=pd.Timestamp(year=start_year, month=start_month, day=start_day),
+        end=pd.Timestamp(year=end_year, month=end_month, day=end_day),
+        freq='D'
+    )
+
+    df = pd.DataFrame(date_range, columns=['date'])
+    df['year'] = df['date'].dt.year
+    df['month'] = df['date'].dt.month
+    df['day'] = df['date'].dt.day
+
+    years = date_range.year.tolist()
+    months = date_range.month.tolist()
+    days = date_range.day.tolist()
+
+    return years, months, days
